@@ -1,0 +1,14 @@
+package com.example.p10roomlocal
+
+import android.app.Application
+import com.example.p10roomlocal.dependeciesinjection.ContainerApp
+
+class KrsApp : Application() {
+    lateinit var containerApp: ContainerApp //Fungsinya untuk menyimpan instance
+
+    override fun onCreate() {
+        super.onCreate()
+        containerApp = ContainerApp(this) //membuat instance ContainerApp
+        // instance adalah object yang dibuat dari class
+    }
+}
