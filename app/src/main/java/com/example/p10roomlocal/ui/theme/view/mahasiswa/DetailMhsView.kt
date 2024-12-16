@@ -3,6 +3,7 @@ package com.example.p10roomlocal.ui.theme.view.mahasiswa
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -46,140 +47,155 @@ import com.example.p10roomlocal.ui.theme.viewmodel.toMahasiswaEntity
 
 
 @Composable
-fun DetailMhsView(
+fun DetailMhsView (
     modifier: Modifier = Modifier,
-    viewModel: DetailMhsViewModel = viewModel(factory = PenyediaViewModel.Factory),
-    onBack: () -> Unit = {},
-    onEditClick: (String) -> Unit = {},
-    onDeleteClick: () -> Unit = {},
+    viewModel: DetailMhsViewModel = viewModel (factory = PenyediaViewModel.Factory),
+    onBack: () -> Unit = { },
+    onEditClick: (String) -> Unit = { },
+    onDeleteClick: () -> Unit = { }
 ){
-    Scaffold(
+    Scaffold (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .padding(top = 18.dp),
         topBar = {
             TopAppBar(
                 judul = "Detail Mahasiswa",
-                showBackButton = true,
-                onBack = onBack,
+                showBackButton = false,
+                onBack = { },
                 modifier = modifier
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            FloatingActionButton (
                 onClick = {
-                    onEditClick(viewModel.detailUIState.value.detailUiEvent.nim) },
+                    onEditClick(viewModel.detailUiState.value.detailUiEvent.nim)
+                },
                 shape = MaterialTheme.shapes.medium,
-                modifier = modifier.padding(16.dp)
-            ){
+                modifier = Modifier.padding(16.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit Mahasiswa",
                 )
             }
         }
-    ){innerPadding ->
-        val detailUiState by viewModel.detailUIState.collectAsState()
+    ) { innerPadding ->
+        val detailUiState by viewModel.detailUiState.collectAsState()
 
         BodyDetailMhs(
-            modifier = modifier.padding(innerPadding),
+            modifier = Modifier.padding(innerPadding),
             detailUiState = detailUiState,
             onDeleteClick = {
                 viewModel.deleteMhs()
-                onDeleteClick
+                onDeleteClick()
             }
         )
     }
 }
 
 @Composable
-fun BodyDetailMhs(
+fun BodyDetailMhs (
     modifier: Modifier = Modifier,
     detailUiState: DetailUiState = DetailUiState(),
-    onDeleteClick: () -> Unit = {}
-){
-    var deleteConfirmationRequared by rememberSaveable { mutableStateOf(false) }
-    when{
-        detailUiState.isLoading ->{
+    onDeleteClick: () -> Unit = { }
+) {
+    var deleteConfirmationRequired by rememberSaveable { mutableStateOf(false) }
+    when {
+        detailUiState.isLoading -> {
             Box(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator() //tampilkan loading
+            ) {
+                CircularProgressIndicator() // Tampilkan loading
             }
         }
-        detailUiState.isUiEventNotEmpty ->{
+
+        detailUiState.isUiEventNotEmpty -> {
             Column(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-            ){
+            ) {
                 ItemDetailMhs(
                     mahasiswa = detailUiState.detailUiEvent.toMahasiswaEntity(),
-                    modifier = modifier
+                    modifier = Modifier
                 )
-                Spacer(modifier = modifier.padding(8.dp))
-                Button(
+                Spacer(modifier = Modifier.padding(8.dp))
+                Button (
                     onClick = {
-                        deleteConfirmationRequared = true
+                        deleteConfirmationRequired = true
                     },
-                    modifier = modifier.fillMaxWidth()
-                ){
-                    Text("Delete")
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Delete")
                 }
-                if(deleteConfirmationRequared){
+                if (deleteConfirmationRequired) {
                     DeleteConfirmationDialog(
                         onDeleteConfirm = {
-                            deleteConfirmationRequared = false
+                            deleteConfirmationRequired = false
                             onDeleteClick()
                         },
-                        onDeleteCancel = {
-                            deleteConfirmationRequared = false
-                        },
-                        modifier = modifier.padding(8.dp)
+                        onDeleteCancel = { deleteConfirmationRequired = false },
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
+            }
+        }
+
+        detailUiState.isUiEventEmpty -> {
+            Box(
+                modifier = modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Data tidak ditemukan",
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-fun ItemDetailMhs(
+fun ItemDetailMhs (
     modifier: Modifier = Modifier,
     mahasiswa: Mahasiswa
 ){
-    Card(
+    Card (
         modifier = modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+            .fillMaxWidth (),
+        colors = CardDefaults.cardColors (
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     ){
-        Column(
-            modifier = modifier
-                .padding(16.dp)
-        ) {
-            ComponentDetailMhs(judul = "NIM", isinya = mahasiswa.nim)
-            Spacer(modifier = modifier.padding(4.dp))
-            ComponentDetailMhs(judul = "Nama", isinya = mahasiswa.nama)
-            Spacer(modifier = modifier.padding(4.dp))
-            ComponentDetailMhs(judul = "Alamat", isinya = mahasiswa.alamat)
-            Spacer(modifier = modifier.padding(4.dp))
-            ComponentDetailMhs(judul = "Jenis Kelamin", isinya = mahasiswa.jenisKelamin)
-            Spacer(modifier = modifier.padding(4.dp))
-            ComponentDetailMhs(judul = "Kelas", isinya = mahasiswa.kelas)
-            Spacer(modifier = modifier.padding(4.dp))
-            ComponentDetailMhs(judul = "Angkatan", isinya = mahasiswa.angkatan)
+        Column (
+            modifier = Modifier.padding(16.dp)
+        ){
+            ComponentDetailMhs (judul = "NIM", isinya = mahasiswa. nim)
+            Spacer(modifier = Modifier.padding(4.dp))
+            ComponentDetailMhs (judul = "Nama", isinya = mahasiswa. nama)
+            Spacer(modifier = Modifier.padding(4.dp))
+            ComponentDetailMhs (judul = "Alamat", isinya = mahasiswa.alamat)
+            Spacer(modifier = Modifier.padding(4.dp))
+            ComponentDetailMhs (judul = "Jenis Kelamin", isinya = mahasiswa. jenisKelamin)
+            Spacer(modifier = Modifier.padding(4.dp))
+            ComponentDetailMhs (judul = "Kelas", isinya = mahasiswa.kelas)
+            Spacer(modifier = Modifier.padding(4.dp))
+            ComponentDetailMhs (judul = "Angkatan", isinya = mahasiswa.angkatan)
         }
     }
 }
 
 @Composable
-fun ComponentDetailMhs(
+fun ComponentDetailMhs (
     modifier: Modifier = Modifier,
-    judul:String,
-    isinya:String
-){
-    Column(
+    judul: String,
+    isinya: String,
+) {
+    Column (
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
@@ -188,33 +204,33 @@ fun ComponentDetailMhs(
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Gray
+
         )
         Text(
-            text = isinya,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            text = isinya, fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
 
 @Composable
-private fun DeleteConfirmationDialog(
-    onDeleteConfirm: () -> Unit,
-    onDeleteCancel: () -> Unit,
-    modifier: Modifier = Modifier
-){
-    AlertDialog(onDismissRequest = {/*Do Nothing*/},
-        title = {Text("Delete Data")},
-        text = {Text("Apakah anda yakin ingin menghapus data ini?")},
+private fun DeleteConfirmationDialog (
+    onDeleteConfirm: () -> Unit, onDeleteCancel: () -> Unit, modifier: Modifier =
+        Modifier
+) {
+    AlertDialog(onDismissRequest = { /* Do nothing */ },
+        title = { Text("Delete Data") },
+        text = { Text("Apakah anda yakin ingin menghapus data?") },
         modifier = modifier,
         dismissButton = {
-            TextButton(onClick = onDeleteCancel) {
-                Text("Cancel")
+            TextButton (onClick = onDeleteCancel) {
+                Text(text = "Cancel")
             }
         },
         confirmButton = {
             TextButton(onClick = onDeleteConfirm) {
-                Text("Yes")
+                Text(text = "Yes")
             }
-        })
+        }
+    )
 }

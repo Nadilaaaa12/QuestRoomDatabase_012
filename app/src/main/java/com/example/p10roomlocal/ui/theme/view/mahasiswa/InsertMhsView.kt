@@ -33,80 +33,110 @@ import com.example.p10roomlocal.ui.theme.costumwidget.TopAppBar
 import com.example.p10roomlocal.ui.theme.navigation.AlamatNavigasi
 import com.example.p10roomlocal.ui.theme.viewmodel.MahasiswaViewModel
 import com.example.p10roomlocal.ui.theme.viewmodel.PenyediaViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object DestinasiInsert : AlamatNavigasi{
     override val route: String = "insert_mhs"
 }
 
 @Composable
-fun InsertMhsView(
-    onBack:() -> Unit,
-    onNavigate:() -> Unit,
-    modifier: Modifier =Modifier,
-    viewModel: MahasiswaViewModel= viewModel(factory = PenyediaViewModel.Factory)
+fun InsertBodyMhs(
+    modifier: Modifier = Modifier,
+    onValueChange: (MahasiswaEvent) -> Unit,
+    uiState: MhsUIState,
+    onClick: () -> Unit
 ){
-    val uiState = viewModel.uiState // ambil uistate dari view model
-    val snackbarHostState = remember{SnackbarHostState()}  // Snackbar state
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        FormMahasiswa(
+            mahasiswaEvent = uiState.mahasiswaEvent,
+            onValueChange = onValueChange,
+            errorState = uiState.isEntryValid,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Simpan")
+        }
+    }
+}
+
+@Composable
+fun InserMhsView(
+    onBack: () -> Unit,
+    onNavigate: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MahasiswaViewModel = viewModel(factory = PenyediaViewModel.Factory)
+){
+    val uiState = viewModel.uiState //Ambil UI State dari ViewModel
+    val snackbarHostState = remember { SnackbarHostState() } //Snackbar state
     val coroutineScope = rememberCoroutineScope()
 
-    // observasi
-
+    // Observasi perubahan snackbarMessage
     LaunchedEffect(uiState.snackBarMessage) {
-        uiState.snackBarMessage?.let{message->
+        uiState.snackBarMessage?.let { message ->
             coroutineScope.launch {
-                snackbarHostState.showSnackbar(message) // tampilkan snackbar
+                snackbarHostState.showSnackbar(message) //Tampilkan Snackbar
                 viewModel.resetSnackBarMessage()
             }
         }
     }
 
-    Scaffold (
-        modifier= modifier,
-        snackbarHost = { SnackbarHost(hostState=snackbarHostState) }
-    ){ padding ->
-        Column (
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ){
+    Scaffold(
+        modifier = Modifier,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState)}
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)
+        ) {
             TopAppBar(
                 onBack = onBack,
                 showBackButton = true,
-                judul = " Tambah Mahasiswa"
+                judul = "Tambah Mahasiswa"
             )
 
-            // isi body
+            //Isi Body
             InsertBodyMhs(
-                uiState= uiState,
+                uiState = uiState,
                 onValueChange = { updatedEvent ->
-                    viewModel.updateState(updatedEvent) // update state di view
+                    viewModel.UpdateState(updatedEvent) // Update State di View Model
                 },
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.saveData() // simpan data
+                        if (viewModel.validateFields()){
+                            viewModel.saveData()
+                            delay(500)
+                            withContext(Dispatchers.Main) {
+                                onNavigate()
+                            }
+                        }
                     }
-                    onNavigate()
                 }
             )
         }
     }
 }
 
-
 @Composable
 fun FormMahasiswa(
     mahasiswaEvent: MahasiswaEvent = MahasiswaEvent(),
-    onValueChange: (MahasiswaEvent) -> Unit ={},
+    onValueChange: (MahasiswaEvent) -> Unit,
     errorState: FormErrorState = FormErrorState(),
-    modifier: Modifier= Modifier
-) {
-    val jenisKelamin = listOf("Laki laki", "Perempuan")
+    modifier: Modifier = Modifier
+){
+    val jenisKelasmin = listOf("Laki-Laki", "Perempuan")
     val kelas = listOf("A", "B", "C", "D", "E")
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -114,35 +144,46 @@ fun FormMahasiswa(
             onValueChange = {
                 onValueChange(mahasiswaEvent.copy(nama = it))
             },
-            label = { Text("Nama") },
+            label = {
+                Text("Nama")
+            },
             isError = errorState.nama != null,
-            placeholder = { Text("Masukkan Nama") },
+            placeholder = {
+                Text("Masukkan Nama")
+            }
         )
         Text(
             text = errorState.nama ?: "",
             color = Color.Red
         )
+
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = mahasiswaEvent.nim,
             onValueChange = {
                 onValueChange(mahasiswaEvent.copy(nim = it))
             },
-            label = { Text("Nim") },
+            label = {
+                Text("NIM")
+            },
             isError = errorState.nim != null,
-            placeholder = { Text("Masukkan Nim") },
+            placeholder = {
+                Text("Masukkan NIM")
+            }
         )
         Text(
             text = errorState.nim ?: "",
             color = Color.Red
         )
+
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Jenis Kelamin")
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            jenisKelamin.forEach { jk ->
+            jenisKelasmin.forEach { jk ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
@@ -151,10 +192,10 @@ fun FormMahasiswa(
                         selected = mahasiswaEvent.jenisKelamin == jk,
                         onClick = {
                             onValueChange(mahasiswaEvent.copy(jenisKelamin = jk))
-                        },
+                        }
                     )
                     Text(
-                        text = jk,
+                        text = jk
                     )
                 }
             }
@@ -165,15 +206,20 @@ fun FormMahasiswa(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = mahasiswaEvent.alamat,
             onValueChange = {
                 onValueChange(mahasiswaEvent.copy(alamat = it))
             },
-            label = { Text("Alamat") },
+            label = {
+                Text("Alamat")
+            },
             isError = errorState.alamat != null,
-            placeholder = { Text("Masukkan Alamat") },
+            placeholder = {
+                Text("Masukkan Alamat")
+            }
         )
         Text(
             text = errorState.alamat ?: "",
@@ -185,19 +231,19 @@ fun FormMahasiswa(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            kelas.forEach { kelas ->
+            kelas.forEach { kls ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
                     RadioButton(
-                        selected = mahasiswaEvent.kelas == kelas,
+                        selected = mahasiswaEvent.kelas == kls,
                         onClick = {
-                            onValueChange(mahasiswaEvent.copy(kelas = kelas))
-                        },
+                            onValueChange(mahasiswaEvent.copy(kelas = kls))
+                        }
                     )
                     Text(
-                        text = kelas,
+                        text = kls
                     )
                 }
             }
@@ -208,46 +254,25 @@ fun FormMahasiswa(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = mahasiswaEvent.angkatan,
             onValueChange = {
                 onValueChange(mahasiswaEvent.copy(angkatan = it))
             },
-            label = { Text("Angkatan") },
+            label = {
+                Text("Angkatan")
+            },
             isError = errorState.angkatan != null,
-            placeholder = { Text("Masukkan Angkatan") },
+            placeholder = {
+                Text("Masukkan Angkatan")
+            }
         )
         Text(
             text = errorState.angkatan ?: "",
             color = Color.Red
         )
-    }
-}
 
-@Composable
-fun InsertBodyMhs(
-    modifier: Modifier=Modifier,
-    onValueChange: (MahasiswaEvent) -> Unit,
-    uiState: MhsUIState,
-    onClick:() -> Unit
-){
-    Column (
-        modifier=modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        FormMahasiswa(
-            mahasiswaEvent = uiState.mahasiswaEvent,
-            onValueChange = onValueChange,
-            errorState = uiState.isEntryValid,
-            modifier= Modifier.fillMaxWidth()
-        )
-        Button(
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text("Simpan")
-        }
     }
 }
