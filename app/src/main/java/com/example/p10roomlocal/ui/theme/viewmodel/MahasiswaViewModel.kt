@@ -5,42 +5,100 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.p10roomlocal.data.entity.Mahasiswa
 import com.example.p10roomlocal.repository.RepositoryMhs
 import kotlinx.coroutines.launch
 
-// data class variabel yang menyimpan
+class MahasiswaViewModel(
+    private val repositoryMhs: RepositoryMhs
+): ViewModel(){
+    var uiState by mutableStateOf(MhsUIState())
+
+    //memperbarui state berdasarkan input pengguna
+    fun UpdateState(mahasiswaEvent: MahasiswaEvent){
+        uiState = uiState.copy(
+            mahasiswaEvent = mahasiswaEvent
+        )
+    }
+
+    //validasi data input pengguna
+    fun validateFields(): Boolean {
+        val event = uiState.mahasiswaEvent
+        val errorState = FormErrorState(
+            nim = if (event.nim.isNotEmpty()) null else "NIM tidak boleh kosong",
+            nama = if (event.nama.isNotEmpty()) null else "Nama tidak boleh kosong",
+            jenisKelamin = if (event.jenisKelamin.isNotEmpty()) null else "Jenis Kelamin tidak boleh kosong",
+            alamat = if (event.alamat.isNotEmpty()) null else "Alamat tidak boleh kosong",
+            kelas = if (event.kelas.isNotEmpty()) null else "Kelas tidak boleh kosong",
+            angkatan = if (event.angkatan.isNotEmpty()) null else "Angkatan tidak boleh kosong",
+        )
+
+        uiState = uiState.copy(isEntryValid = errorState)
+        return errorState.isValid()
+    }
+
+    // menyimpan data ke repository
+    fun saveData(){
+        val currentEvent = uiState.mahasiswaEvent
+
+        if (validateFields()){
+            viewModelScope.launch {
+                try {
+                    repositoryMhs.insertMhs(currentEvent.toMahasiswaEntity())
+                    uiState = uiState.copy(
+                        snackBarMessage = "Data berhasil disimpan",
+                        mahasiswaEvent = MahasiswaEvent(),
+                        isEntryValid = FormErrorState()
+                    )
+                } catch (e: Exception){
+                    uiState = uiState.copy(
+                        snackBarMessage = "Data gagal disimpan"
+                    )
+                }
+            }
+        } else {
+            uiState = uiState.copy(
+                snackBarMessage = "Input tidak valid. Periksa kembali data anda"
+            )
+        }
+    }
+
+    //reset pesan SnackBar setelah ditampilkan
+    fun resetSnackBarMessage(){
+        uiState = uiState.copy(snackBarMessage = null)
+    }
+}
+
+//data class variabel yang menyimpan
 // data input form
 data class MahasiswaEvent(
-    val nim:String ="",
-    val nama:String ="",
-    val jenisKelamin:String ="",
-    val alamat:String ="",
-    val kelas:String ="",
-    val angkatan:String ="",
+    val nim: String = "",
+    val nama: String = "",
+    val jenisKelamin: String = "",
+    val alamat: String = "",
+    val kelas: String = "",
+    val angkatan: String = "",
 )
 
-//menyimpan input form ke dalam entity
-
+// menyimpan input form ke dalam entity
 fun MahasiswaEvent.toMahasiswaEntity(): Mahasiswa = Mahasiswa(
-    nim= nim,
+    nim = nim,
     nama = nama,
-    jenisKelamin= jenisKelamin,
+    jenisKelamin = jenisKelamin,
     alamat = alamat,
     kelas = kelas,
-    angkatan = angkatan,
+    angkatan = angkatan
 )
 
 data class FormErrorState(
     val nim: String? = null,
     val nama: String? = null,
-    val jenisKelamin: String? =null,
+    val jenisKelamin: String? = null,
     val alamat: String? = null,
     val kelas: String? = null,
-    val angkatan: String? = null
+    val angkatan: String? = null,
 ){
-    fun isValid(): Boolean{
+    fun isValid(): Boolean {
         return nim == null
                 && nama == null
                 && jenisKelamin == null
@@ -55,66 +113,5 @@ data class MhsUIState(
     val isEntryValid: FormErrorState = FormErrorState(),
     val snackBarMessage: String? = null,
 )
-
-class MahasiswaViewModel(
-    private val repositoryMhs: RepositoryMhs
-):ViewModel(){
-
-    var uiState by mutableStateOf(MhsUIState())
-
-    // memperbarui state berdasarkan input pengguna
-    fun updateState(mahasiswaEvent: MahasiswaEvent){
-        uiState = uiState.copy(
-            mahasiswaEvent=mahasiswaEvent,
-        )
-    }
-
-    // validasi
-    private fun validateFields(): Boolean{
-        val event = uiState.mahasiswaEvent
-        val errorState = FormErrorState(
-            nim = if (event.nim.isNotEmpty()) null else "NIM tidak boleh kosong",
-            nama = if (event.nama.isNotEmpty()) null else "Nama tidak boleh kosong",
-            jenisKelamin = if (event.jenisKelamin.isNotEmpty()) null else "Jenis Kelamin tidak boleh kosong",
-            alamat = if (event.alamat.isNotEmpty()) null else "Alamat tidak boleh kosong",
-            kelas = if (event.kelas.isNotEmpty()) null else "Kelas tidak boleh kosong",
-            angkatan = if (event.angkatan.isNotEmpty()) null else "Angkatan tidak boleh kosong",
-        )
-
-        uiState = uiState.copy(isEntryValid = errorState)
-        return errorState.isValid()
-
-    }
-
-    fun saveData(){
-        val currentEvent = uiState.mahasiswaEvent
-
-        if (validateFields()){
-            viewModelScope.launch{
-                try {
-                    repositoryMhs.insertMhs(currentEvent.toMahasiswaEntity())
-                    uiState = uiState.copy(
-                        snackBarMessage = " Data Berhasil disimpan",
-                        mahasiswaEvent = MahasiswaEvent(), // reset input form
-                        isEntryValid = FormErrorState(), // reset error state
-                    )
-                } catch (e: Exception){
-                    uiState = uiState.copy(
-                        snackBarMessage = " Data gagal disimpan"
-                    )
-                }
-            }
-        } else{
-            uiState = uiState.copy(
-                snackBarMessage = "input tidak valid. Periksa kembali data anda"
-            )
-        }
-    }
-
-    // reset pesan
-    fun resetSnackBarMessage(){
-        uiState = uiState.copy(snackBarMessage = null)
-    }
-}
 
 
