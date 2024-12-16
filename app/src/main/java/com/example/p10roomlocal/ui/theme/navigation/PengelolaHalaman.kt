@@ -13,17 +13,15 @@ import com.example.p10roomlocal.ui.theme.view.mahasiswa.InsertMhsView
 fun PengelolaHalaman(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
-) {
+){
     NavHost(
         navController = navController,
-        startDestination = DestinasiInsert.route) {
+        startDestination = DestinasiInsert.route
+    ){
         composable(
             route = DestinasiInsert.route
-        ) {
-            InsertMhsView(
-                onBack = {}, onNavigate = { }
-            )
+        ){
+            InsertMhsView(onBack = {}, onNavigate = {})
         }
     }
-
 }
