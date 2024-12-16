@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.p10roomlocal.data.entity.Mahasiswa
 import com.example.p10roomlocal.repository.RepositoryMhs
-import com.example.p10roomlocal.ui.theme.navigation.AlamatNavigasi
+import com.example.p10roomlocal.ui.theme.navigation.DestinasiDetail
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,12 +18,11 @@ import kotlinx.coroutines.launch
 
 class DetailMhsViewModel (
     savedStateHandle: SavedStateHandle,
-    private val repositoryMhs: RepositoryMhs,
+    private val repositoryMhs: RepositoryMhs
+) : ViewModel(){
+    private val _nim: String = checkNotNull(savedStateHandle[DestinasiDetail.NIM])
 
-    ) : ViewModel() {
-    private val _nim: String = checkNotNull(savedStateHandle[AlamatNavigasi.DestinasiDetail.NIM])
-
-    val detailUIState: StateFlow<DetailUiState> = repositoryMhs.getMhs(_nim)
+    val detailUiState: StateFlow<DetailUiState> = repositoryMhs.getMhs(_nim)
         .filterNotNull()
         .map {
             DetailUiState(
@@ -39,8 +38,8 @@ class DetailMhsViewModel (
             emit(
                 DetailUiState(
                     isLoading = false,
-                    isError =  true,
-                    errorMessage = it.message ?: "Terjadi Kesalahan",
+                    isError = true,
+                    errorMessage = it.message ?: "Terjadi kesalahan",
                 )
             )
         }
@@ -48,12 +47,12 @@ class DetailMhsViewModel (
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(2000),
             initialValue = DetailUiState(
-                isLoading = true,
-            ),
+                isLoading = true
+            )
         )
 
     fun deleteMhs() {
-        detailUIState.value.detailUiEvent.toMahasiswaEntity().let {
+        detailUiState.value.detailUiEvent.toMahasiswaEntity().let {
             viewModelScope.launch {
                 repositoryMhs.deleteMhs(it)
             }
@@ -62,11 +61,11 @@ class DetailMhsViewModel (
 }
 
 data class DetailUiState(
-    val detailUiEvent : MahasiswaEvent = MahasiswaEvent(),
+    val detailUiEvent: MahasiswaEvent = MahasiswaEvent(),
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMessage: String = ""
-){
+) {
     val isUiEventEmpty: Boolean
         get() = detailUiEvent == MahasiswaEvent()
 
@@ -74,9 +73,7 @@ data class DetailUiState(
         get() = detailUiEvent != MahasiswaEvent()
 }
 
-//data class untuk menampung data yang akan ditampilkan di UI
-
-//memindahkan data dari entity ke ui
+//Memindahkan data dari entity ke ui
 fun Mahasiswa.toDetailUiEvent(): MahasiswaEvent {
     return MahasiswaEvent(
         nim = nim,
