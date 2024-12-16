@@ -3,7 +3,7 @@
 //Tampilan Tambah Mahasiswa
 ![P10roomlocal](https://github.com/user-attachments/assets/0cad1b52-4280-4b69-8896-9a531d2beddc)
 
-//Tampilan Daftar Mahasiswa
+//Tampilan Daftar Mahasiswa Atau Update 
 ![Pam baru](https://github.com/user-attachments/assets/9e2638f0-f639-40d6-a98f-2ed44a6bcded)
 
 //Tampilan Detail Mahasiswa
